@@ -147,6 +147,41 @@ $(CsWinRTFilters)
     <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
+  <!-- Call The GuidPatch tool on the projection .dll -->
+  <Target Name="CsWinRTInvokeGuidPatcher" Condition="'$(CsWinRTGuidPatchOptOut)' != 'true'" AfterTargets="Compile" BeforeTargets="Link">
+
+    <!-- You can use a Directory.Build.props file to set two properties as the path to the patcher and the winrt.runtime used
+          - CsWinRTGuidPatchPath
+          - CsWinRTGuidPatchRuntimeDll
+    -->
+    <Message Text="CsWinRTGuidPatchPath = $(CsWinRTGuidPatchPath)"/>
+    <Message Text="CsWinRTGuidPatchRuntimePath = $(CsWinRTGuidPatchRuntimePath)"/>
+
+    <!-- We condition on CsWinRTGuidPatchPath and CsWinRTGuidPatchRuntimeDll in case we are doing a local (CsWinRT repo) build -->
+    <PropertyGroup>
+      <CsWinRTGuidPatchExePath Condition="'$(CsWinRTGuidPatchPath)' != ''">$(CsWinRTGuidPatchPath)</CsWinRTGuidPatchExePath>
+      <CsWinRTGuidPatchRuntimeDll Condition="'$(CsWinRTGuidPatchRuntimePath)' != ''">$(CsWinRTGuidPatchRuntimePath)</CsWinRTGuidPatchRuntimeDll> 
+
+      <CsWinRTGuidPatchExePath Condition="'$(CsWinRTGuidPatchPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTGuidPatchExePath>
+      <CsWinRTGuidPatchRuntimeDll Condition="'$(CsWinRTGuidPatchRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTGuidPatchRuntimeDll> 
+
+      <!-- Below "BuildProjectOutputGroupKeyOutput" is using the obj folder, reconsider... -->
+      <CsWinRTGuidPatchInput Condition="'$(CsWinRTGuidPatchInput)' == ''">@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTGuidPatchInput>
+    </PropertyGroup>
+    
+    <Exec Command="$(CsWinRTGuidPatchExePath)GuidPatch.exe $(CsWinRTGuidPatchInput) $(CsWinRTGuidPatchRuntimeDll)" 
+          ConsoleToMsBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="CsWinRTGuidPatchOutput" />
+    </Exec>
+    
+    <ItemGroup>
+      <CsWinRTGuidPatchedFiles Include="$(MSBuildProjectDirectory)\obj\GuidPatcherOutput\*.dll" />
+    </ItemGroup>
+    
+    <!--  Replace the .dll in the output folder with the optimized version we just made -->
+    <Copy SourceFiles="@(CsWinRTGuidPatchedFiles)" DestinationFolder="$(TargetDir)" />
+  </Target>
+  
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets" Condition="Exists('$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Prerelease.targets')"/>
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Windows.CsWinRT.Authoring.targets" Condition="'$(CsWinRTComponent)' == 'true'"/>
 
