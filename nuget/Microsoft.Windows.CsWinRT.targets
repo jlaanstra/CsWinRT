@@ -147,7 +147,7 @@ $(CsWinRTFilters)
     <Copy SourceFiles="$(CsWinRTGeneratedFilesDir)\$(AssemblyName).winmd" DestinationFolder="$(TargetDir)" UseHardlinksIfPossible="false" SkipUnchangedFiles="true" />
   </Target>
 
-  <!-- Call The GuidPatch tool on the projection .dll -->
+  <!-- Call The IIDOptimizer tool on the projection .dll -->
   <Target Name="CsWinRTInvokeGuidPatcher" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'" AfterTargets="Compile" BeforeTargets="Link">
 
     <!-- todo: cut in final commi, for debugging only  -->
@@ -158,6 +158,7 @@ $(CsWinRTFilters)
     <PropertyGroup>
       <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' != ''">$(CsWinRTIIDOptimizerPath)</CsWinRTIIDOptimizerExePath>
       <CsWinRTIIDOptimizerRuntimeDll Condition="'$(CsWinRTIIDOptimizerRuntimePath)' != ''">$(CsWinRTIIDOptimizerRuntimePath)</CsWinRTIIDOptimizerRuntimeDll> 
+      <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' != '' AND !Exists('$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe')">$(CsWinRTIIDOptimizerPathWithPlatform)</CsWinRTIIDOptimizerExePath>
 
       <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerExePath>
       <CsWinRTIIDOptimizerRuntimeDll Condition="'$(CsWinRTIIDOptimizerRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTIIDOptimizerRuntimeDll> 
