@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <Platforms>x64;x86</Platforms>
-    <TargetFrameworks>netcoreapp2.0;net5.0;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;netcoreapp3.1;net5.0;</TargetFrameworks>
     <UseWinmd>false</UseWinmd>
     <BenchmarkWinmdSupport Condition="'$(BenchmarkWinmdSupport)' == ''">false</BenchmarkWinmdSupport>
     <!-- Controls whether to build using WinMDs or the projection. -->
@@ -17,7 +17,17 @@
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" Condition="$(UseWinmd) == false"/>
   </ItemGroup>
 
+  <Target Name="Print Test Path">
+	    <Message Text="HELOOO $(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.dll" Importance="high"/>
+    </Target>
+	
   <ItemGroup>
+    <Reference Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\netstandard2.0\Windows.dll"></Reference>
+    <Reference Condition="'$(TargetFramework)' != 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Windows\bin\x64\Release\$(TargetFramework)\Windows.dll"></Reference>
+    
+    <Reference Condition="'$(TargetFramework)' == 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\netstandard2.0\Benchmark.dll"></Reference>
+    <Reference Condition="'$(TargetFramework)' != 'netcoreapp2.0'" Include="$(MSBuildThisFileDirectory)..\Projections\Benchmark\bin\x64\Release\$(TargetFramework)\Benchmark.dll"></Reference>
+    
     <ProjectReference Include="..\Projections\Windows\Windows.csproj" Condition="$(UseWinmd) == false" />
     <ProjectReference Include="..\Projections\Benchmark\Benchmark.csproj" Condition="$(UseWinmd) == false" />
     <ProjectReference Include="..\TestWinRT\BenchmarkComponent\BenchmarkComponent.vcxproj" Condition="$(UseWinmd) == true" />
@@ -32,6 +42,7 @@
     <Reference Include="BenchmarkComponent.winmd" Condition="$(UseWinmd) == true">
       <HintPath>$(MSBuildThisFileDirectory)..\_build\$(Platform)\$(Configuration)\BenchmarkComponent\bin\BenchmarkComponent\BenchmarkComponent.winmd</HintPath>
       <IsWinMDFile>true</IsWinMDFile>
+		<Visible>True</Visible>
     </Reference>
 
     <!-- When building for NetCoreApp 3.1, we test the WinMD scenario via reg free winrt, so it needs to be in the bin folder for the generated project to reference it. -->
@@ -42,7 +53,7 @@
     </None>
 
   </ItemGroup>
-  
+
   <Target Name="FilterProjection" BeforeTargets="CoreCompile" Condition="$(UseWinmd) == false">
     <ItemGroup>
       <!--Remove references to projection source winmds to prevent compile conflict warnings-->

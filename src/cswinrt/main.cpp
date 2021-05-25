@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "type_writers.h"
 #include "code_writers.h"
+#include <concurrent_unordered_map.h>
 
 namespace cswinrt
 {
@@ -166,16 +167,21 @@ Where <spec> is one or more of:
 
             task_group group;
 
+            concurrency::concurrent_unordered_map<std::string, std::string> typeNameToDefinitionMap;
             bool projectionFileWritten = false;
             for (auto&& ns_members : c.namespaces())
             {
-                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten]
+                group.add([&ns_members, &componentActivatableClasses, &projectionFileWritten, &typeNameToDefinitionMap]
                 {
                     auto&& [ns, members] = ns_members;
                     std::string_view currentType = "";
                     try
                     {
                         writer w(ns);
+                        writer helperWriter("WinRT");
+                        
+                        //if (ns != "Windows.System") return;
+                        std::cout << ns << std::endl;
                         w.write_begin();
                         bool written = false;
                         bool requires_abi = false;
@@ -189,6 +195,12 @@ Where <spec> is one or more of:
                                 continue;
                             }
                             auto guard{ w.push_generic_params(type.GenericParam()) };
+                            auto guard1{ helperWriter.push_generic_params(type.GenericParam()) };
+                            std::vector<std::string_view> typeGenericParams;
+                            for (auto&& genParam : type.GenericParam())
+                            {
+                                typeGenericParams.push_back(genParam.Name());
+                            }
 
                             bool type_requires_abi = true;
                             switch (get_category(type))
@@ -213,6 +225,19 @@ Where <spec> is one or more of:
                                         write_factory_class(w, type);
                                     }
                                 }
+                                for (auto&& ii : type.InterfaceImpl())
+                                {
+                                    auto const& containerType = type;
+                                    for_typedef(helperWriter, get_type_semantics(ii.Interface()), [&](TypeDef const& interfaceType)
+                                    {
+                                        for (auto&& eventObj : interfaceType.EventList())
+                                        {
+                                            auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+                                            auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+                                            typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics, containerType));
+                                        }
+                                    });
+                                }
                                 break;
                             case category::delegate_type:
                                 write_delegate(w, type);
@@ -223,6 +248,12 @@ Where <spec> is one or more of:
                                 break;
                             case category::interface_type:
                                 write_interface(w, type);
+                                for (auto&& eventObj : type.EventList())
+                                {
+                                    auto&& eventTypeSemantics = get_type_semantics(eventObj.EventType());
+                                    auto&& eventTypeCode = helperWriter.write_temp("%", bind<write_type_name>(eventTypeSemantics, typedef_name_type::Projected, false));
+                                    typeNameToDefinitionMap[eventTypeCode] = helperWriter.write_temp("%", bind<write_event_source_subclass>(eventTypeSemantics, type));
+                                }
                                 break;
                             case category::struct_type:
                                 if (is_api_contract_type(type))
@@ -305,11 +336,11 @@ Where <spec> is one or more of:
                         writer console;
                         console.write("error: '%' when processing %%%\n", e.what(), ns, currentType.empty() ? "" : ".", currentType);
                         console.flush_to_console();
-                        throw;
+                        throw e;
                     }
                 });
             }
-
+            
             if(settings.component)
             {
                 group.add([&componentActivatableClasses, &projectionFileWritten]
@@ -323,6 +354,15 @@ Where <spec> is one or more of:
             }
 
             group.get();
+            writer eventHelperWriter("WinRT");
+            eventHelperWriter.write("namespace WinRT\n{\n%\n}", bind([&](writer& w) {
+                //write_special_event_sources(w);
+                for (auto&& [key, value] : typeNameToDefinitionMap)
+                {
+                    w.write("%", value);
+                }
+            }));
+            eventHelperWriter.flush_to_file(settings.output_folder / "WinRTEventHelpers.cs");
 
             if (projectionFileWritten)
             {
@@ -348,6 +388,7 @@ Where <spec> is one or more of:
         {
             w.write(" error: %\n", e.what());
             result = 1;
+            throw e;
         }
 
         w.flush_to_console();
@@ -357,5 +398,7 @@ Where <spec> is one or more of:
 
 int main(int const argc, char** argv)
 {
+    std::cout << "Started" << std::endl;
     return cswinrt::run(argc, argv);
+    std::cout << "Ended" << std::endl;
 }
