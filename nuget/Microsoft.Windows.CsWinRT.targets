@@ -150,7 +150,7 @@ $(CsWinRTFilters)
   <!-- Call The IIDOptimizer tool on the projection .dll -->
   <Target Name="CsWinRTInvokeGuidPatcher" Condition="'$(CsWinRTIIDOptimizerOptOut)' != 'true'" AfterTargets="Compile" BeforeTargets="Link">
 
-    <!-- todo: cut in final commi, for debugging only  -->
+    <!-- todo: cut in final commit, for debugging only  -->
     <Message Text="CsWinRTIIDOptimizerPath = $(CsWinRTIIDOptimizerPath)"/>
     <Message Text="CsWinRTIIDOptimizerRuntimePath = $(CsWinRTIIDOptimizerRuntimePath)"/>
 
@@ -158,13 +158,18 @@ $(CsWinRTFilters)
     <PropertyGroup>
       <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' != ''">$(CsWinRTIIDOptimizerPath)</CsWinRTIIDOptimizerExePath>
       <CsWinRTIIDOptimizerRuntimeDll Condition="'$(CsWinRTIIDOptimizerRuntimePath)' != ''">$(CsWinRTIIDOptimizerRuntimePath)</CsWinRTIIDOptimizerRuntimeDll> 
-      <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' != '' AND !Exists('$(CsWinRTIIDOptimizerPath)IIDOptimizer.exe')">$(CsWinRTIIDOptimizerPathWithPlatform)</CsWinRTIIDOptimizerExePath>
 
       <CsWinRTIIDOptimizerExePath Condition="'$(CsWinRTIIDOptimizerPath)' == ''">$(CsWinRTPath)build\tools\GuidPatch\</CsWinRTIIDOptimizerExePath>
       <CsWinRTIIDOptimizerRuntimeDll Condition="'$(CsWinRTIIDOptimizerRuntimePath)' == ''">$(CsWinRTPath)lib\net5.0\</CsWinRTIIDOptimizerRuntimeDll> 
 
       <!-- Below "BuildProjectOutputGroupKeyOutput" is using the obj folder, reconsider... -->
       <CsWinRTIIDOptimizerInput Condition="'$(CsWinRTIIDOptimizerInput)' == ''">@(BuiltProjectOutputGroupKeyOutput->'%(Identity)')</CsWinRTIIDOptimizerInput>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <Joshua_DebugExe>$([System.IO.File]::Exists('$(CsWinRTIIDOptimizerExePath)IIDOptimizer.exe'))</Joshua_DebugExe>
+      <Joshua_DebugArg>$([System.IO.File]::Exists('$(CsWinRTIIDOptimizerInput)'))</Joshua_DebugArg>
+      <Joshua_DebugRuntime>$([System.IO.File]::Exists('$(CsWinRTIIDOptimizerRuntimeDll)'))</Joshua_DebugRuntime>
     </PropertyGroup>
     
     <Exec Command="$(CsWinRTIIDOptimizerExePath)IIDOptimizer.exe $(CsWinRTIIDOptimizerInput) $(CsWinRTIIDOptimizerRuntimeDll)" 
