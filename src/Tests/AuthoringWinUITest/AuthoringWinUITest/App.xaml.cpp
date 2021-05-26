@@ -26,7 +26,7 @@ using namespace AuthoringWinUITest::implementation;
 App::App()
 {
     InitializeComponent();
-    Suspending({ this, &App::OnSuspending });
+    //Suspending({ this, &App::OnSuspending });
 
 #if defined _DEBUG && !defined DISABLE_XAML_GENERATED_BREAK_ON_UNHANDLED_EXCEPTION
     UnhandledException([this](IInspectable const&, UnhandledExceptionEventArgs const& e)
@@ -58,7 +58,7 @@ void App::OnLaunched(LaunchActivatedEventArgs const&)
 /// </summary>
 /// <param name="sender">The source of the suspend request.</param>
 /// <param name="e">Details about the suspend request.</param>
-void App::OnSuspending([[maybe_unused]] IInspectable const& sender, [[maybe_unused]] Windows::ApplicationModel::SuspendingEventArgs const& e)
-{
-    // Save application state and stop any background activity
-}
+//void App::OnSuspending([[maybe_unused]] IInspectable const& sender, [[maybe_unused]] Windows::ApplicationModel::SuspendingEventArgs const& e)
+//{
+//    // Save application state and stop any background activity
+//}
