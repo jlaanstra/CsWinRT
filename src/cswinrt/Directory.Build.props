@@ -7,9 +7,10 @@
         <CppWinRTMergeNoValidate>true</CppWinRTMergeNoValidate>
     </PropertyGroup>
 
-    <!--Only need the WinUI winmd files for compiling idl, so stub out Xaml targets-->
-    <Target Name="MarkupCompilePass1" />
-    <Target Name="MarkupCompilePass2" />
-    <Target Name="Prep_ComputeProcessXamlFiles" />
+    <ItemDefinitionGroup>
+        <Midl>
+            <AdditionalOptions>%(AdditionalOptions) /D UAC_VERSION=99</AdditionalOptions>
+        </Midl>
+    </ItemDefinitionGroup>
 
 </Project>
