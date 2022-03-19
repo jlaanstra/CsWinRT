@@ -53,7 +53,7 @@
     <Extensions>
         <Extension Category="windows.activatableClass.inProcessServer">
             <InProcessServer>
-                <Path>WpfApp\WinRT.Host.dll</Path>
+                <Path>WpfApp\NativeHostNE.dll</Path>
                 <ActivatableClass ActivatableClassId="BgTaskComponent.ToastBgTask" ThreadingModel="both" />
             </InProcessServer>
         </Extension>
